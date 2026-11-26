@@ -1,0 +1,64 @@
+#compdef zgit
+
+_zgit() {
+    local state line
+
+    _arguments -C \
+        '--init[Gdriveに新しいリポジトリを作成して紐付け]:repository_name: ' \
+        '--clone[Gdriveからリポジトリをクローン]:repository_name:->repos' \
+        '(--list -l)'{--list,-l}'[Gdrive上のリポジトリ一覧を表示]' \
+        '(--delete --rm)'{--delete,--rm}'[Gdrive上のリポジトリを削除]:repository_name:->repos' \
+        '--rename[Gdrive上のリポジトリ名を変更]:old_name:->repos:new_name: ' \
+        '--save[変更を一括でコミット＆プッシュ (爆速保存)]:commit_message: ' \
+        '--sync[Gdriveと最新状態を同期 (端末移動用)]' \
+        '--info[現在の状態とGdriveの紐付け・fsck健全性を確認]' \
+        '--config[baseパスの解決結果 (ソース・パス・リポジトリ数) を表示]' \
+        '--log[コミット履歴をツリー状に表示]' \
+        '--push[現在のブランチをGdriveへプッシュ]' \
+        '--pull[Gdriveから現在のブランチへプル]' \
+        '*::arg:->args'
+
+    case "$state" in
+        repos)
+            local -a repos=()
+            local base cfg line val
+            # v2.1: base 解決は ZGIT_BASE env → ~/.config/zgit/config → 自動検出
+            if [[ -n "$ZGIT_BASE" ]]; then
+                base="${ZGIT_BASE}"
+                [[ "$base" == "~/"* ]] && base="${HOME}${base#\~}"
+            elif [[ -f "$HOME/.config/zgit/config" ]]; then
+                base=""
+                while IFS= read -r line || [[ -n "$line" ]]; do
+                    line="${line%$'\r'}"
+                    line="${line#"${line%%[![:space:]]*}"}"
+                    line="${line%"${line##*[![:space:]]}"}"
+                    [[ -z "$line" || "$line" == \#* ]] && continue
+                    [[ "${line%%=*}" != base ]] && continue
+                    val="${line#*=}"
+                    val="${val#"${val%%[![:space:]]*}"}"
+                    val="${val%"${val##*[![:space:]]}"}"
+                    [[ "$val" == "~/"* ]] && val="${HOME}${val#\~}"
+                    base="$val"
+                    break
+                done < "$HOME/.config/zgit/config"
+            else
+                base=""
+                for base in "$HOME"/Library/CloudStorage/GoogleDrive-*/マイ*/Mac/remote_dev_env; do
+                    [[ -d $base ]] && break
+                    base=""
+                done
+            fi
+            if [[ -n "$base" && -d $base ]]; then
+                repos=($(ls -1 "$base" 2>/dev/null | grep '\.git$' | sed 's/\.git$//'))
+            fi
+            if (( ${#repos[@]} > 0 )); then
+                _describe -t repositories 'Gdrive repositories' repos
+            fi
+            ;;
+        args)
+            _files
+            ;;
+    esac
+}
+
+_zgit "$@"
