@@ -525,7 +525,10 @@ case "$COMMAND" in
         NEW_REPO="$BASE/$NEW_NAME.git"
         if [[ ! -d "$OLD_REPO" ]]; then print -P "%F{red}[ERROR] Gdrive上にリポジトリが見つかりません: $OLD_NAME%f"; exit 1; fi
         if [[ -d "$NEW_REPO" ]]; then print -P "%F{red}[ERROR] 変更後の名前はすでに存在します%f"; exit 1; fi
-        mv "$OLD_REPO" "$NEW_REPO"
+        if ! mv "$OLD_REPO" "$NEW_REPO"; then
+            print -P "%F{red}[ERROR] Gdrive上のリポジトリ移動に失敗しました: $OLD_REPO -> $NEW_REPO%f"
+            exit 1
+        fi
         print -P "%F{green}リポジトリ名を変更しました: $OLD_NAME -> $NEW_NAME%f"
         CURRENT_URL=$(git remote get-url gdrive 2>/dev/null)
         if [[ "$CURRENT_URL" == "$OLD_REPO" ]]; then
