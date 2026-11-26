@@ -237,5 +237,31 @@ out=$(runA "$T/confA" --sync); rc=${out##*RC=}
 check "24f A syncs final" 0 "$rc"
 grep -q "resolved-2" "$T/confA/a.txt" && ok "24g final content on A" || fail "24g final content on A"
 
+# ---- 25. install.sh embedded heredocs must stay byte-identical with standalone zgit/_zgit ----
+REPO_DIR="${ZGIT:h}"
+if [[ ! -f "$REPO_DIR/install.sh" ]]; then
+  print "SKIP: 25 (install.sh not beside the zgit under test — standalone zgit)"
+  ok "25 skipped (no install.sh beside zgit)"
+else
+  I=$(grep -n 'cat > "$TMP_ZGIT" << .EOF_ZGIT.' "$REPO_DIR/install.sh" | head -1 | cut -d: -f1)
+  E=$(grep -n '^EOF_ZGIT$' "$REPO_DIR/install.sh" | head -1 | cut -d: -f1)
+  if [[ -n "$I" && -n "$E" && "$E" -gt "$I" ]]; then
+    sed -n "$((I+1)),$((E-1))p" "$REPO_DIR/install.sh" > "$T/embed_zgit"
+    diff -q "$T/embed_zgit" "$ZGIT" > /dev/null && ok "25a embedded zgit in install.sh in sync" || fail "25a embedded zgit in install.sh in sync"
+  else
+    fail "25a EOF_ZGIT heredoc markers not found in install.sh"
+  fi
+  if [[ -f "$REPO_DIR/_zgit" ]]; then
+    I2=$(grep -n 'cat > "$COMP_FILE" << .EOF_COMP.' "$REPO_DIR/install.sh" | head -1 | cut -d: -f1)
+    E2=$(grep -n '^EOF_COMP$' "$REPO_DIR/install.sh" | head -1 | cut -d: -f1)
+    if [[ -n "$I2" && -n "$E2" && "$E2" -gt "$I2" ]]; then
+      sed -n "$((I2+1)),$((E2-1))p" "$REPO_DIR/install.sh" > "$T/embed_comp"
+      diff -q "$T/embed_comp" "$REPO_DIR/_zgit" > /dev/null && ok "25b embedded _zgit in install.sh in sync" || fail "25b embedded _zgit in install.sh in sync"
+    else
+      fail "25b EOF_COMP heredoc markers not found in install.sh"
+    fi
+  fi
+fi
+
 print "\n==== RESULT: $PASS passed, $FAIL failed ===="
 [[ $FAIL == 0 ]]
