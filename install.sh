@@ -1,6 +1,6 @@
 #!/bin/zsh
 # ============================================================================
-#  🚀 zgit Installer for macOS  (v2.1, 2026-11)
+#  zgit Installer for macOS  (v2.1, 2026-11)
 #
 #  使い方:
 #    ./install.sh              # インストール / 更新
@@ -80,9 +80,9 @@ if [[ "$1" == "--uninstall" || "$1" == "--purge" ]]; then
     MODE="$1"
     print -P "%F{cyan}====================================================%f"
     if [[ $MODE == --purge ]]; then
-        print -P "%F{red}  🗑 zgit Uninstall + PURGE（データ削除あり）%f"
+        print -P "%F{red}  zgit Uninstall + PURGE（データ削除あり）%f"
     else
-        print -P "%F{cyan}  🧹 zgit Uninstall（リポジトリデータは保持）%f"
+        print -P "%F{cyan}  zgit Uninstall（リポジトリデータは保持）%f"
     fi
     print -P "%F{cyan}====================================================%f"
     echo ""
@@ -97,7 +97,7 @@ if [[ "$1" == "--uninstall" || "$1" == "--purge" ]]; then
     if [[ $MODE == --purge ]]; then
         if PURGE_BASE=$(resolve_gdrive_base); then
             N=$(ls -1 "$PURGE_BASE" 2>/dev/null | wc -l | tr -d ' ')
-            echo "  - ⚠️ データ: $PURGE_BASE（$N 項目）"
+            echo "  - [WARN] データ: $PURGE_BASE（$N 項目）"
         else
             echo "  - （Gdrive base は見つからなかった → データ削除なし）"
         fi
@@ -117,15 +117,15 @@ if [[ "$1" == "--uninstall" || "$1" == "--purge" ]]; then
     if [[ -f $ZGIT_BIN ]]; then
         cp "$ZGIT_BIN" "$SCRIPT_DIR/zgit.bak.$TS" 2>/dev/null
         sudo rm -f "$ZGIT_BIN"
-        print -P "%F{green}✔ zgit本体を削除しました（バックアップ: $SCRIPT_DIR/zgit.bak.$TS）%f"
+        print -P "%F{green}[OK] zgit本体を削除しました（バックアップ: $SCRIPT_DIR/zgit.bak.$TS）%f"
     else
-        print -P "%F{cyan}ℹ️ zgit本体は存在しませんでした%f"
+        print -P "%F{cyan}[INFO] zgit本体は存在しませんでした%f"
     fi
 
     # 2. 補完スクリプト（フォルダが空なら一緒に削除）
     if [[ -f $COMP_FILE ]]; then
         rm -f "$COMP_FILE"
-        print -P "%F{green}✔ 補完スクリプトを削除しました%f"
+        print -P "%F{green}[OK] 補完スクリプトを削除しました%f"
     fi
     rmdir "$COMP_DIR" 2>/dev/null
 
@@ -137,7 +137,7 @@ if [[ "$1" == "--uninstall" || "$1" == "--purge" ]]; then
             -e '/fpath=.*\.zsh\/completions/d' \
             -e '/^autoload -Uz compinit && compinit$/d' \
             "$ZSHRC"
-        print -P "%F{green}✔ .zshrc の zgit 行を削除しました（バックアップ: $SCRIPT_DIR/.zshrc.bak.$TS）%f"
+        print -P "%F{green}[OK] .zshrc の zgit 行を削除しました（バックアップ: $SCRIPT_DIR/.zshrc.bak.$TS）%f"
     fi
 
     # 4. 補完キャッシュ（zsh の NOMATCH 回避）
@@ -149,19 +149,19 @@ if [[ "$1" == "--uninstall" || "$1" == "--purge" ]]; then
         print -P "%F{yellow}【 削除されるリポジトリ 】%f"
         ls -1 "$PURGE_BASE"
         echo ""
-        print -P "%F{red}⚠️ これらのリポジトリ（データ）をすべて削除します。本当に続行しますか？ (y/N)%f"
+        print -P "%F{red}[WARN] これらのリポジトリ（データ）をすべて削除します。本当に続行しますか？ (y/N)%f"
         read -q "REPLY2? " < /dev/tty
         echo ""
         if [[ $REPLY2 =~ ^[Yy]$ ]]; then
             rm -rf "$PURGE_BASE"
-            print -P "%F{green}✔ リポジトリデータを削除しました%f"
+            print -P "%F{green}[OK] リポジトリデータを削除しました%f"
         else
             print -P "%F{cyan}データ削除はキャンセルしました（ツール側の除去は完了）%f"
         fi
     fi
 
     echo ""
-    print -P "%F{cyan}🎉 アンインストール完了！設定を反映するには: %F{magenta}source ~/.zshrc%f"
+    print -P "%F{cyan}アンインストール完了！設定を反映するには: %F{magenta}source ~/.zshrc%f"
     exit 0
 fi
 
@@ -183,13 +183,13 @@ fi
 #  インストール / 更新
 # ============================================================
 print -P "%F{cyan}====================================================%f"
-print -P "%F{cyan}  🚀 zgit Installer for macOS (v2.1)%f"
+print -P "%F{cyan}  zgit Installer for macOS (v2.1)%f"
 print -P "%F{cyan}====================================================%f"
 echo ""
 
 # --- 事前チェック: base 解決（v2.1: env → config → 自動検出） ---
 if ! resolve_gdrive_base > /dev/null; then
-    print -P "%F{yellow}⚠️ Gdrive base を解決できませんでした%f"
+    print -P "%F{yellow}[WARN] Gdrive base を解決できませんでした%f"
     print "   解決順: 1) 環境変数 ZGIT_BASE → 2) ~/.config/zgit/config の base= → 3) 自動検出"
     print "   設定例: echo 'base=~/path/to/remote_dev_env' > ~/.config/zgit/config"
     print "   （インストール自体は続行します。zgit 実行時に再解決されます）"
@@ -300,7 +300,7 @@ function gdrive_base() {
 function require_gdrive_base() {
     local base
     if ! base=$(gdrive_base); then
-        print -P "%F{red}❌ Gdrive base を解決できませんでした%f"
+        print -P "%F{red}[ERROR] Gdrive base を解決できませんでした%f"
         print "   解決順: 1) 環境変数 ZGIT_BASE → 2) ~/.config/zgit/config の base= → 3) 自動検出"
         print "   自動検出の期待パス: ~/Library/CloudStorage/GoogleDrive-*/マイ*/Mac/remote_dev_env"
         print "   設定例: export ZGIT_BASE=\"~/Library/CloudStorage/GoogleDrive-xxx/My Drive/Mac/remote_dev_env\""
@@ -312,7 +312,7 @@ function require_gdrive_base() {
 
 if [[ -z "$1" || "$1" == "-h" || "$1" == "--help" ]]; then
     print -P "%F{cyan}====================================================%f"
-    print -P "%F{cyan}  🚀 zgit - The Seamless Git Wrapper for Google Drive%f"
+    print -P "%F{cyan}  zgit - The Seamless Git Wrapper for Google Drive%f"
     print -P "%F{cyan}====================================================%f"
     echo ""
     print -P "%F{yellow}【 概要 】%f"
@@ -321,7 +321,7 @@ if [[ -z "$1" || "$1" == "-h" || "$1" == "--help" ]]; then
     echo "  zgit独自の機能は「--」から始まるオプションで実行します。"
     echo "  普段使っている標準の git コマンドはそのまま zgit 経由で使えます。"
     echo ""
-    print -P "%F{yellow}【 🛠 zgit 専用オプション 】%f"
+    print -P "%F{yellow}【 zgit 専用オプション 】%f"
     print -P "  %F{green}--init <repo>%f  : 現在のディレクトリを初期化し、Gdriveに紐付け"
     print -P "  %F{green}--clone <repo>%f : Gdriveから既存のリポジトリを現在の場所にクローン"
     print -P "  %F{green}--list%f         : Gdrive上に保存されているリポジトリの一覧を表示"
@@ -335,13 +335,13 @@ if [[ -z "$1" || "$1" == "-h" || "$1" == "--help" ]]; then
     print -P "  %F{green}--push%f         : 現在のブランチをGdriveへプッシュ"
     print -P "  %F{green}--pull%f         : Gdriveから現在のブランチへプル"
     echo ""
-    print -P "%F{yellow}【 ⚙️ base パス設定 (解決順) 】%f"
+    print -P "%F{yellow}【 base パス設定 (解決順) 】%f"
     echo "  1) 環境変数 ZGIT_BASE"
     echo "  2) ~/.config/zgit/config の base=<path> 行 (次点: ~/.zgitrc)"
     echo "  3) 自動検出: ~/Library/CloudStorage/GoogleDrive-*/マイ*/Mac/remote_dev_env"
     echo "  ※ --info の fsck チェックは ZGIT_NO_FSCK=1 でスキップできます"
     echo ""
-    print -P "%F{yellow}【 📦 標準 Git コマンド (透過実行) 】%f"
+    print -P "%F{yellow}【 標準 Git コマンド (透過実行) 】%f"
     print -P "  %F{green}<any command>%f  : オプション(--)をつけない場合は標準gitとして動作します"
     echo ""
     exit 0
@@ -353,7 +353,7 @@ shift
 function setup_gdrive_dir() {
     if [[ ! -d "$BASE" ]]; then
         mkdir -p "$BASE"
-        print -P "%F{green}📁 Created Gdrive base directory: $BASE%f"
+        print -P "%F{green}Created Gdrive base directory: $BASE%f"
     fi
 }
 
@@ -363,7 +363,7 @@ function get_current_branch() {
 
 case "$COMMAND" in
     --config)
-        print -P "%F{cyan}⚙️  zgit base 設定 (解決順: ZGIT_BASE env → 設定ファイル → 自動検出)%f"
+        print -P "%F{cyan}zgit base 設定 (解決順: ZGIT_BASE env → 設定ファイル → 自動検出)%f"
         zc_resolved=""
         zc_src="(未解決)"
         if [[ -n "$ZGIT_BASE" ]]; then
@@ -395,10 +395,10 @@ case "$COMMAND" in
                 zc_n=$(ls -1 "$zc_resolved" 2>/dev/null | grep -c '\.git$')
                 print "  Repos  : ${zc_n:-0} (.git)"
             else
-                print -P "  %F{yellow}⚠️  ディレクトリが存在しません (--init 実行時に作成されます)%f"
+                print -P "  %F{yellow}[WARN] ディレクトリが存在しません (--init 実行時に作成されます)%f"
             fi
         else
-            print -P "  %F{red}❌ base を解決できませんでした%f"
+            print -P "  %F{red}[ERROR] base を解決できませんでした%f"
             print "  設定例: export ZGIT_BASE=\"~/Library/CloudStorage/GoogleDrive-xxx/My Drive/Mac/remote_dev_env\""
             print "  または: echo 'base=~/path/to/remote_dev_env' > ~/.config/zgit/config"
             exit 1
@@ -406,56 +406,56 @@ case "$COMMAND" in
         ;;
     --init)
         REPO_NAME=$1
-        if [[ -z "$REPO_NAME" ]]; then print -P "%F{red}❌ リポジトリ名を指定してください%f"; exit 1; fi
+        if [[ -z "$REPO_NAME" ]]; then print -P "%F{red}[ERROR] リポジトリ名を指定してください%f"; exit 1; fi
         BASE=$(require_gdrive_base) || exit 1
         setup_gdrive_dir
         GDRIVE_REPO="$BASE/$REPO_NAME.git"
-        if [[ -d "$GDRIVE_REPO" ]]; then print -P "%F{red}❌ Gdrive上に既に存在します%f"; exit 1; fi
+        if [[ -d "$GDRIVE_REPO" ]]; then print -P "%F{red}[ERROR] Gdrive上に既に存在します%f"; exit 1; fi
         git init --bare "$GDRIVE_REPO" > /dev/null
         git init > /dev/null
         git remote add gdrive "$GDRIVE_REPO"
-        print -P "%F{green}✅ Initialized local repo and linked to Gdrive.%f"
+        print -P "%F{green}[OK] Initialized local repo and linked to Gdrive.%f"
 
         if [[ ! -f .gitignore ]]; then
-            print -P "%F{yellow}ℹ️  .gitignore が見つかりません。macOS用の汎用的な .gitignore を作成しますか？ (y/N)%f"
+            print -P "%F{yellow}[INFO] .gitignore が見つかりません。macOS用の汎用的な .gitignore を作成しますか？ (y/N)%f"
             read -q "REPLY? " < /dev/tty
             echo ""
             if [[ "$REPLY" =~ ^[Yy]$ ]]; then
                 echo ".DS_Store" > .gitignore
                 echo "node_modules/" >> .gitignore
                 echo "*.log" >> .gitignore
-                print -P "%F{green}📄 .gitignore を作成しました%f"
+                print -P "%F{green}.gitignore を作成しました%f"
             fi
         fi
         ;;
     --clone)
         REPO_NAME=$1
-        if [[ -z "$REPO_NAME" ]]; then print -P "%F{red}❌ リポジトリ名を指定してください%f"; exit 1; fi
+        if [[ -z "$REPO_NAME" ]]; then print -P "%F{red}[ERROR] リポジトリ名を指定してください%f"; exit 1; fi
         BASE=$(require_gdrive_base) || exit 1
         GDRIVE_REPO="$BASE/$REPO_NAME.git"
-        if [[ ! -d "$GDRIVE_REPO" ]]; then print -P "%F{red}❌ リポジトリが見つかりません%f"; exit 1; fi
-        print -P "%F{cyan}📥 Cloning $REPO_NAME...%f"
+        if [[ ! -d "$GDRIVE_REPO" ]]; then print -P "%F{red}[ERROR] リポジトリが見つかりません%f"; exit 1; fi
+        print -P "%F{cyan}Cloning $REPO_NAME...%f"
         git clone "$GDRIVE_REPO" "$REPO_NAME"
         cd "$REPO_NAME" && git remote rename origin gdrive
         ;;
     --list|-l)
         BASE=$(require_gdrive_base) || exit 1
-        print -P "%F{cyan}📂 Gdrive上のリポジトリ一覧:%f"
+        print -P "%F{cyan}Gdrive上のリポジトリ一覧:%f"
         repos=$(ls -1 "$BASE" 2>/dev/null | grep '\.git$' | sed 's/\.git$//')
-        [[ -z "$repos" ]] && echo "  (リポジトリなし)" || echo "$repos" | while read repo; do print -P "  🌿 %F{green}$repo%f"; done
+        [[ -z "$repos" ]] && echo "  (リポジトリなし)" || echo "$repos" | while read repo; do print -P "  - %F{green}$repo%f"; done
         ;;
     --delete|--rm)
         REPO_NAME=$1
-        if [[ -z "$REPO_NAME" ]]; then print -P "%F{red}❌ リポジトリ名を指定してください%f"; exit 1; fi
+        if [[ -z "$REPO_NAME" ]]; then print -P "%F{red}[ERROR] リポジトリ名を指定してください%f"; exit 1; fi
         BASE=$(require_gdrive_base) || exit 1
         GDRIVE_REPO="$BASE/$REPO_NAME.git"
-        if [[ ! -d "$GDRIVE_REPO" ]]; then print -P "%F{red}❌ Gdrive上にリポジトリが見つかりません: $REPO_NAME%f"; exit 1; fi
-        print -P "%F{yellow}⚠️  本当に Gdrive 上の '$REPO_NAME' リポジトリを削除しますか？ (y/N)%f"
+        if [[ ! -d "$GDRIVE_REPO" ]]; then print -P "%F{red}[ERROR] Gdrive上にリポジトリが見つかりません: $REPO_NAME%f"; exit 1; fi
+        print -P "%F{yellow}[WARN] 本当に Gdrive 上の '$REPO_NAME' リポジトリを削除しますか？ (y/N)%f"
         read -q "REPLY? " < /dev/tty
         echo ""
         if [[ "$REPLY" =~ ^[Yy]$ ]]; then
             rm -rf "$GDRIVE_REPO"
-            print -P "%F{green}🗑️  削除しました: $REPO_NAME%f"
+            print -P "%F{green}削除しました: $REPO_NAME%f"
         else
             print -P "%F{cyan}キャンセルしました%f"
         fi
@@ -463,32 +463,32 @@ case "$COMMAND" in
     --rename)
         OLD_NAME=$1
         NEW_NAME=$2
-        if [[ -z "$OLD_NAME" || -z "$NEW_NAME" ]]; then print -P "%F{red}❌ 変更前と変更後のリポジトリ名を指定してください (例: zgit --rename old_name new_name)%f"; exit 1; fi
+        if [[ -z "$OLD_NAME" || -z "$NEW_NAME" ]]; then print -P "%F{red}[ERROR] 変更前と変更後のリポジトリ名を指定してください (例: zgit --rename old_name new_name)%f"; exit 1; fi
         BASE=$(require_gdrive_base) || exit 1
         OLD_REPO="$BASE/$OLD_NAME.git"
         NEW_REPO="$BASE/$NEW_NAME.git"
-        if [[ ! -d "$OLD_REPO" ]]; then print -P "%F{red}❌ Gdrive上にリポジトリが見つかりません: $OLD_NAME%f"; exit 1; fi
-        if [[ -d "$NEW_REPO" ]]; then print -P "%F{red}❌ 変更後の名前はすでに存在します%f"; exit 1; fi
+        if [[ ! -d "$OLD_REPO" ]]; then print -P "%F{red}[ERROR] Gdrive上にリポジトリが見つかりません: $OLD_NAME%f"; exit 1; fi
+        if [[ -d "$NEW_REPO" ]]; then print -P "%F{red}[ERROR] 変更後の名前はすでに存在します%f"; exit 1; fi
         mv "$OLD_REPO" "$NEW_REPO"
-        print -P "%F{green}✏️  リポジトリ名を変更しました: $OLD_NAME -> $NEW_NAME%f"
+        print -P "%F{green}リポジトリ名を変更しました: $OLD_NAME -> $NEW_NAME%f"
         CURRENT_URL=$(git remote get-url gdrive 2>/dev/null)
         if [[ "$CURRENT_URL" == "$OLD_REPO" ]]; then
             git remote set-url gdrive "$NEW_REPO"
-            print -P "%F{green}🔗 ローカルのgdriveリモートURLも更新しました%f"
+            print -P "%F{green}ローカルのgdriveリモートURLも更新しました%f"
         else
-            print -P "%F{yellow}ℹ️  現在のリポジトリのgdrive URLが異なっていたためローカルURLは変更していません%f"
+            print -P "%F{yellow}[INFO] 現在のリポジトリのgdrive URLが異なっていたためローカルURLは変更していません%f"
         fi
         ;;
     --push)
         BRANCH=$(get_current_branch)
-        [[ -z "$BRANCH" ]] && { print -P "%F{red}❌ ブランチがありません%f"; exit 1; }
-        print -P "%F{cyan}⬆️  Pushing to Gdrive ($BRANCH)...%f"
+        [[ -z "$BRANCH" ]] && { print -P "%F{red}[ERROR] ブランチがありません%f"; exit 1; }
+        print -P "%F{cyan}Pushing to Gdrive ($BRANCH)...%f"
         git push gdrive "$BRANCH" "$@"
         ;;
     --pull)
         BRANCH=$(get_current_branch)
-        [[ -z "$BRANCH" ]] && { print -P "%F{red}❌ Gitリポジトリ内ではありません%f"; exit 1; }
-        print -P "%F{cyan}⬇️  Pulling from Gdrive ($BRANCH)...%f"
+        [[ -z "$BRANCH" ]] && { print -P "%F{red}[ERROR] Gitリポジトリ内ではありません%f"; exit 1; }
+        print -P "%F{cyan}Pulling from Gdrive ($BRANCH)...%f"
         git pull gdrive "$BRANCH" "$@"
         ;;
     --save)
@@ -499,31 +499,31 @@ case "$COMMAND" in
         fi
         git add .
         if git diff --cached --quiet; then
-            print -P "%F{cyan}ℹ️  コミットする変更はありません%f"
+            print -P "%F{cyan}[INFO] コミットする変更はありません%f"
             exit 0
         fi
         if ! git commit -m "$MSG"; then
-            print -P "%F{red}❌ commit に失敗しました（push は実行していません）%f"
+            print -P "%F{red}[ERROR] commit に失敗しました（push は実行していません）%f"
             exit 1
         fi
         BRANCH=$(get_current_branch)
         if ! git push gdrive "$BRANCH" 2>/dev/null; then
             # リモートに自分より新しいコミットがある（別マシンで保存済み）→ rebaseして再試行
-            print -P "%F{yellow}ℹ️ pushが拒否されました。リモートをrebaseしてから再試行します...%f"
+            print -P "%F{yellow}[INFO] pushが拒否されました。リモートをrebaseしてから再試行します...%f"
             if ! git pull --rebase gdrive "$BRANCH"; then
-                print -P "%F{red}❌ rebaseにコンフリクトが発生しました。手動で解決し、完了後に 'git rebase --continue' と 'zgit --push' を実行してください。%f"
+                print -P "%F{red}[ERROR] rebaseにコンフリクトが発生しました。手動で解決し、完了後に 'git rebase --continue' と 'zgit --push' を実行してください。%f"
                 exit 1
             fi
             if ! git push gdrive "$BRANCH"; then
-                print -P "%F{red}❌ push に失敗しました（ローカルの commit は残っています）%f"
+                print -P "%F{red}[ERROR] push に失敗しました（ローカルの commit は残っています）%f"
                 exit 1
             fi
         fi
-        print -P "%F{green}✅ Saved and pushed!%f"
+        print -P "%F{green}[OK] Saved and pushed!%f"
         ;;
     --sync)
         BRANCH=$(get_current_branch)
-        [[ -z "$BRANCH" ]] && { print -P "%F{red}❌ ブランチがありません%f"; exit 1; }
+        [[ -z "$BRANCH" ]] && { print -P "%F{red}[ERROR] ブランチがありません%f"; exit 1; }
         STASHED=false
         if [[ -n $(git status -s) ]]; then
             git stash push -m "zgit --sync $(date +'%Y-%m-%d %H:%M:%S')" > /dev/null
@@ -533,20 +533,20 @@ case "$COMMAND" in
         # リモートにこのブランチがまだない（初回同期）場合は pull をスキップして push だけ実行
         if git ls-remote --exit-code gdrive "refs/heads/$BRANCH" > /dev/null 2>&1; then
             if ! git pull --rebase gdrive "$BRANCH"; then
-                print -P "%F{red}❌ コンフリクトまたはエラーが発生しました。手動で解決し、完了後に git rebase --continue と zgit --push を実行してください。%f"
+                print -P "%F{red}[ERROR] コンフリクトまたはエラーが発生しました。手動で解決し、完了後に git rebase --continue と zgit --push を実行してください。%f"
                 if [[ "$STASHED" == true ]]; then
-                    print -P "%F{yellow}⚠️  未処理の自動stashが残っています（'git stash pop' で復元）:%f"
+                    print -P "%F{yellow}[WARN] 未処理の自動stashが残っています（'git stash pop' で復元）:%f"
                     git stash list | head -5
                 fi
                 exit 1
             fi
         else
-            print -P "%F{cyan}ℹ️ リモートに $BRANCH ブランチがないため pull をスキップします（初回同期）%f"
+            print -P "%F{cyan}[INFO] リモートに $BRANCH ブランチがないため pull をスキップします（初回同期）%f"
         fi
 
         if [[ "$STASHED" == true ]]; then
             if ! git stash pop; then
-                print -P "%F{red}❌ 自動stashの復元(stash pop)に失敗しました（競合）。push は実行していません。%f"
+                print -P "%F{red}[ERROR] 自動stashの復元(stash pop)に失敗しました（競合）。push は実行していません。%f"
                 print -P "   競合を手動解決後: 'git stash drop' → 'zgit --push'"
                 print -P "%F{yellow}   stash list:%f"
                 git stash list | head -5
@@ -554,15 +554,15 @@ case "$COMMAND" in
             fi
         fi
         if ! git push gdrive "$BRANCH"; then
-            print -P "%F{red}❌ push に失敗しました%f"
+            print -P "%F{red}[ERROR] push に失敗しました%f"
             exit 1
         fi
-        print -P "%F{green}✨ Sync complete!%f"
+        print -P "%F{green}Sync complete!%f"
         ;;
     --info)
-        echo "📂 Dir    : $(pwd)"
-        echo "🌿 Branch : $(get_current_branch)"
-        echo "☁️  Remote : $(git remote get-url gdrive 2>/dev/null)"
+        echo "Dir    : $(pwd)"
+        echo "Branch : $(get_current_branch)"
+        echo "Remote : $(git remote get-url gdrive 2>/dev/null)"
         git status -s
         # git fsck による健全性チェック（Drive同期での bare repo 破損 early-warning）
         if [[ -z "$ZGIT_NO_FSCK" ]] && git rev-parse --git-dir > /dev/null 2>&1; then
@@ -571,13 +571,13 @@ case "$COMMAND" in
             if (( fsck_rc == 0 )); then
                 fsck_err=$(printf '%s\n' "$fsck_out" | grep -v '^dangling' || true)
                 if [[ -z "$fsck_err" ]]; then
-                    print -P "%F{green}🩺 fsck   : ✅ 健全 (破損オブジェクトなし)%f"
+                    print -P "%F{green}fsck   : [OK] 健全 (破損オブジェクトなし)%f"
                 else
-                    print -P "%F{yellow}🩺 fsck   : ⚠️ 警告あり (dangling 以外の出力)%f"
+                    print -P "%F{yellow}fsck   : [WARN] 警告あり (dangling 以外の出力)%f"
                     printf '%s\n' "$fsck_err" | head -10
                 fi
             else
-                print -P "%F{red}🩺 fsck   : ❌ 破損の可能性があります (Drive同期を確認してください)%f"
+                print -P "%F{red}fsck   : [ERROR] 破損の可能性があります (Drive同期を確認してください)%f"
                 printf '%s\n' "$fsck_out" | head -15
             fi
         fi
@@ -586,7 +586,7 @@ case "$COMMAND" in
         git log --graph --oneline --decorate --all --color
         ;;
     -*)
-        print -P "%F{red}❌ 不明なオプション: $COMMAND%f"
+        print -P "%F{red}[ERROR] 不明なオプション: $COMMAND%f"
         exit 1
         ;;
     *)
@@ -600,15 +600,15 @@ fi
 
 if [[ -f $ZGIT_BIN ]]; then
     if diff -q "$SRC_ZGIT" "$ZGIT_BIN" > /dev/null 2>&1; then
-        print -P "%F{cyan}ℹ️ 既存の zgit は新バージョンと同一です — 更新をスキップ%f"
+        print -P "%F{cyan}[INFO] 既存の zgit は新バージョンと同一です — 更新をスキップ%f"
     else
         cp "$ZGIT_BIN" "$SCRIPT_DIR/zgit.bak.$(date +%Y%m%d-%H%M%S)" 2>/dev/null
-        print -P "%F{yellow}⚠️ 既存の zgit と差分があります。旧版を .bak として保存して上書きします。%f"
+        print -P "%F{yellow}[WARN] 既存の zgit と差分があります。旧版を .bak として保存して上書きします。%f"
     fi
 fi
 sudo install -m 755 "$SRC_ZGIT" "$ZGIT_BIN"
 [[ -n "$TMP_ZGIT" ]] && rm -f "$TMP_ZGIT"
-print -P "%F{green}✔ zgit本体を $ZGIT_BIN に配置し、実行権限を付与しました。%f"
+print -P "%F{green}[OK] zgit本体を $ZGIT_BIN に配置し、実行権限を付与しました。%f"
 
 # [2/3] タブ補完スクリプトのインストール（同梱 _zgit 優先 → 埋め込み版フォールバック）
 print -P "%F{yellow}[2/3] タブ補完スクリプトをインストールしています...%f"
@@ -684,7 +684,7 @@ _zgit() {
 _zgit "$@"
 EOF_COMP
 fi
-print -P "%F{green}✔ 補完スクリプトを $COMP_FILE に配置しました。%f"
+print -P "%F{green}[OK] 補完スクリプトを $COMP_FILE に配置しました。%f"
 
 # [3/3] .zshrc の設定確認と追記（2行を個別判定）
 print -P "%F{yellow}[3/3] .zshrc の設定を確認しています...%f"
@@ -697,22 +697,22 @@ if ! grep -q "fpath=.*\.zsh/completions" "$ZSHRC" 2>/dev/null; then
         echo "# zgit auto-completion"
         echo "fpath=(~/.zsh/completions \$fpath)"
     } >> "$ZSHRC"
-    print -P "%F{green}✔ .zshrc に fpath 設定を追記しました。%f"
+    print -P "%F{green}[OK] .zshrc に fpath 設定を追記しました。%f"
 else
-    print -P "%F{cyan}✔ .zshrc の fpath 設定は既に存在します。%f"
+    print -P "%F{cyan}[OK] .zshrc の fpath 設定は既に存在します。%f"
 fi
 if ! grep -q "^autoload -Uz compinit && compinit$" "$ZSHRC" 2>/dev/null; then
     echo "autoload -Uz compinit && compinit" >> "$ZSHRC"
-    print -P "%F{green}✔ .zshrc に compinit 設定を追記しました。%f"
+    print -P "%F{green}[OK] .zshrc に compinit 設定を追記しました。%f"
 else
-    print -P "%F{cyan}✔ .zshrc の compinit 設定は既に存在します。%f"
+    print -P "%F{cyan}[OK] .zshrc の compinit 設定は既に存在します。%f"
 fi
 
 # キャッシュのクリア（zsh の NOMATCH 回避）
 (setopt null_glob; rm -f ~/.zcompdump*)
 
 echo ""
-print -P "%F{cyan}🎉 インストールが完了しました！（v2.1）%f"
+print -P "%F{cyan}インストールが完了しました！（v2.1）%f"
 print -P ""
 print -P "%F{yellow}【 base パス設定 (v2.1) 】%f"
 print "  解決順: 1) 環境変数 ZGIT_BASE → 2) ~/.config/zgit/config の base= → 3) 自動検出"
