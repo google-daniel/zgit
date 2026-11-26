@@ -1,7 +1,15 @@
 #!/bin/zsh
 # zgit v2.2 sandbox test — fake Drive + two fake Macs (HOME A / HOME B)
 set -u
-ZGIT="$1"
+if [[ -z "${1:-}" ]]; then
+  print -u2 "usage: zsh tests/sandbox_test.zsh /absolute/path/to/zgit"
+  exit 1
+fi
+# 絶対パス化: runA/runB が cd した後も参照できるようにする。
+# 相対パスを渡すと全ケースが rc=127 で潰れ、rc!=0 系アサーションが空振り PASS する。
+ZGIT="${1:A}"
+if [[ ! -f "$ZGIT" ]]; then print -u2 "ERROR: zgit script not found: $ZGIT"; exit 1; fi
+zsh "$ZGIT" -h > /dev/null 2>&1 || { print -u2 "ERROR: zgit smoke test (-h) failed — aborting before vacuous PASSes"; exit 1; }
 PASS=0; FAIL=0
 ok()   { PASS=$((PASS+1)); print "PASS: $1" }
 fail() { FAIL=$((FAIL+1)); print "FAIL: $1" }
@@ -139,6 +147,89 @@ out=$(runA "$T/nowhere" -h); rc=${out##*RC=}
 check "18a help rc=0" 0 "$rc"
 out=$(runA "$T/projA" --log); rc=${out##*RC=}
 check "18b log rc=0" 0 "$rc"
+
+# ---- 19. --rename error cases ----
+out=$(runA "$T/nowhere" --rename onlyone); rc=${out##*RC=}
+[[ "$rc" != 0 ]] && ok "19a rename missing arg fails" || fail "19a rename missing arg fails"
+expect_out "19b rename missing arg msg" "変更前と変更後のリポジトリ名を指定してください" "$out"
+out=$(runA "$T/nowhere" --rename nosuchrepo newname); rc=${out##*RC=}
+[[ "$rc" != 0 ]] && ok "19c rename nonexistent old fails" || fail "19c rename nonexistent old fails"
+expect_out "19d rename nonexistent msg" "リポジトリが見つかりません" "$out"
+git init --bare -q "$DRIVE/occupied.git"
+out=$(runA "$T/nowhere" --rename exist2 occupied); rc=${out##*RC=}
+[[ "$rc" != 0 ]] && ok "19e rename to existing name fails" || fail "19e rename to existing name fails"
+expect_out "19f rename target-exists msg" "すでに存在します" "$out"
+[[ -d "$DRIVE/exist2.git" ]] && ok "19g old repo untouched" || fail "19g old repo untouched"
+out=$(runA "$T/nowhere" --rename exist2 exist2); rc=${out##*RC=}
+[[ "$rc" != 0 ]] && ok "19h rename to same name fails" || fail "19h rename to same name fails"
+
+# ---- 20. --rename URL mismatch: local remote pointing elsewhere must NOT be touched ----
+mkdir -p "$T/dirX" && cd "$T/dirX" && git init -q && git remote add gdrive "$DRIVE/unrelated.git"
+out=$(runA "$T/dirX" --rename exist2 exist3); rc=${out##*RC=}
+check "20a rename with mismatched local url rc=0" 0 "$rc"
+expect_out "20b mismatch info msg" "ローカルURLは変更していません" "$out"
+[[ $(git -C "$T/dirX" remote get-url gdrive) == "$DRIVE/unrelated.git" ]] && ok "20c local url untouched" || fail "20c local url untouched"
+[[ -d "$DRIVE/exist3.git" && ! -d "$DRIVE/exist2.git" ]] && ok "20d drive-side renamed" || fail "20d drive-side renamed"
+out=$(runA "$T/nowhere" --rename exist3 exist4); rc=${out##*RC=}
+check "20e rename outside any repo rc=0" 0 "$rc"
+[[ -d "$DRIVE/exist4.git" ]] && ok "20f bare renamed outside repo" || fail "20f bare renamed outside repo"
+
+# ---- 21. --rename with spaces updates matching local URL ----
+git init --bare -q "$DRIVE/space app.git"
+mkdir -p "$T/dirS" && cd "$T/dirS" && git init -q && git remote add gdrive "$DRIVE/space app.git"
+out=$(runA "$T/dirS" --rename "space app" "space app 2"); rc=${out##*RC=}
+check "21a rename spaced name rc=0" 0 "$rc"
+[[ $(git -C "$T/dirS" remote get-url gdrive) == "$DRIVE/space app 2.git" ]] && ok "21b spaced url updated" || fail "21b spaced url updated"
+[[ -d "$DRIVE/space app 2.git" ]] && ok "21c spaced bare exists" || fail "21c spaced bare exists"
+
+# ---- 23. conflict via --save: manual resolve (rebase --continue) then --push ----
+mkdir -p "$T/confA"
+out=$(runA "$T/confA" --init confapp); rc=${out##*RC=}
+check "23a init conflict-scenario repo" 0 "$rc"
+print "base" > "$T/confA/a.txt"
+out=$(runA "$T/confA" --save "base"); rc=${out##*RC=}
+check "23b initial save" 0 "$rc"
+mkdir -p "$T/confB"
+out=$(runB "$T/confB" --clone confapp); rc=${out##*RC=}
+check "23c clone on B" 0 "$rc"
+[[ -f "$T/confB/confapp/a.txt" ]] && ok "23d cloned file present" || fail "23d cloned file present"
+git -C "$T/confB/confapp" config user.email t@t; git -C "$T/confB/confapp" config user.name t
+print "A-side" > "$T/confA/a.txt"
+out=$(runA "$T/confA" --save "A change"); rc=${out##*RC=}
+check "23e A saves first" 0 "$rc"
+print "B-side" > "$T/confB/confapp/a.txt"
+out=$(runB "$T/confB/confapp" --save "B change"); rc=${out##*RC=}
+[[ "$rc" != 0 ]] && ok "23f B conflicting save fails" || fail "23f B conflicting save fails"
+expect_out "23g manual-resolve guidance" "手動で解決" "$out"
+[[ -d "$T/confB/confapp/.git/rebase-merge" || -d "$T/confB/confapp/.git/rebase-apply" ]] && ok "23h rebase in progress" || fail "23h rebase in progress"
+print "resolved-1" > "$T/confB/confapp/a.txt"
+git -C "$T/confB/confapp" add a.txt
+GIT_EDITOR=true git -C "$T/confB/confapp" rebase --continue > /dev/null 2>&1
+[[ $? == 0 ]] && ok "23i rebase continue" || fail "23i rebase continue"
+out=$(runB "$T/confB/confapp" --push); rc=${out##*RC=}
+check "23j push after resolve" 0 "$rc"
+out=$(runA "$T/confA" --sync); rc=${out##*RC=}
+check "23k A syncs resolution" 0 "$rc"
+grep -q "resolved-1" "$T/confA/a.txt" && ok "23l resolved content on A" || fail "23l resolved content on A"
+
+# ---- 24. conflict via --sync: manual resolve then --push ----
+print "A2-side" > "$T/confA/a.txt"
+out=$(runA "$T/confA" --save "A2 change"); rc=${out##*RC=}
+check "24a A saves A2" 0 "$rc"
+print "B2-side" > "$T/confB/confapp/a.txt"
+git -C "$T/confB/confapp" add a.txt && git -C "$T/confB/confapp" commit -qm "B2 change"
+out=$(runB "$T/confB/confapp" --sync); rc=${out##*RC=}
+[[ "$rc" != 0 ]] && ok "24b B conflicting sync fails" || fail "24b B conflicting sync fails"
+expect_out "24c conflict guidance" "コンフリクトまたはエラー" "$out"
+print "resolved-2" > "$T/confB/confapp/a.txt"
+git -C "$T/confB/confapp" add a.txt
+GIT_EDITOR=true git -C "$T/confB/confapp" rebase --continue > /dev/null 2>&1
+[[ $? == 0 ]] && ok "24d rebase continue" || fail "24d rebase continue"
+out=$(runB "$T/confB/confapp" --push); rc=${out##*RC=}
+check "24e push after resolve" 0 "$rc"
+out=$(runA "$T/confA" --sync); rc=${out##*RC=}
+check "24f A syncs final" 0 "$rc"
+grep -q "resolved-2" "$T/confA/a.txt" && ok "24g final content on A" || fail "24g final content on A"
 
 print "\n==== RESULT: $PASS passed, $FAIL failed ===="
 [[ $FAIL == 0 ]]
