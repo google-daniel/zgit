@@ -182,6 +182,12 @@ check "21a rename spaced name rc=0" 0 "$rc"
 [[ $(git -C "$T/dirS" remote get-url gdrive) == "$DRIVE/space app 2.git" ]] && ok "21b spaced url updated" || fail "21b spaced url updated"
 [[ -d "$DRIVE/space app 2.git" ]] && ok "21c spaced bare exists" || fail "21c spaced bare exists"
 
+# ---- 22. --rename to invalid target (mv failure) must fail loudly, not fake success ----
+out=$(runA "$T/nowhere" --rename exist4 "sub/dir"); rc=${out##*RC=}
+[[ "$rc" != 0 ]] && ok "22a rename to bad path fails" || fail "22a rename to bad path fails"
+[[ -d "$DRIVE/exist4.git" ]] && ok "22b old repo intact after failed rename" || fail "22b old repo intact after failed rename"
+expect_out "22c rename mv-failure msg" "移動に失敗しました" "$out"
+
 # ---- 23. conflict via --save: manual resolve (rebase --continue) then --push ----
 mkdir -p "$T/confA"
 out=$(runA "$T/confA" --init confapp); rc=${out##*RC=}
