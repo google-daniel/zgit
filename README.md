@@ -42,7 +42,7 @@ cd zgit
 ./install.sh
 ```
 
-The installer (v2.1):
+The installer (v2.2):
 
 1. installs the `zgit` binary to `/usr/local/bin` (asks for your password once via `sudo`)
 2. installs tab-completion to `~/.zsh/completions/_zgit`
@@ -198,6 +198,16 @@ echo 'base=~/Library/CloudStorage/GoogleDrive-you@gmail.com/My Drive/Mac/remote_
 ### 健全性チェック（v2.1）
 
 Drive 同期による git オブジェクトの破損を `zgit --info` が `git fsck` で早期検出します。大規模リポジトリで不要な場合は `ZGIT_NO_FSCK=1 zgit --info` でスキップできます。
+
+## Changelog
+
+### v2.2
+
+- **Fail-fast guards**: `--save`, `--push`, `--pull` and `--sync` now check up front that you are inside a git repo, that a `gdrive` remote exists, and that you are not on a detached HEAD — with clear error messages instead of confusing git output, and without stranding a local commit that could never be pushed.
+- **Idempotent `--init`**: detects an existing repo (skips `git init`), refuses to clobber an existing `gdrive` remote, and only creates the bare repo on Drive after all pre-checks pass — no orphan bare repos left behind on failure.
+- **Scripting-friendly prompts**: the `--init` .gitignore and `--delete` confirmations now read from `/dev/tty` first, then stdin (so `echo y | zgit --delete repo` works), and cancel safely when no input is available.
+- **`--list`** handles repository names containing spaces; **`--info`** prints a friendly message outside a git repo instead of raw git errors; **`--clone`** propagates clone failure with a non-zero exit.
+- Ships a sandbox test suite (`tests/sandbox_test.zsh`) that simulates two Macs against a fake Drive base.
 
 ## License
 

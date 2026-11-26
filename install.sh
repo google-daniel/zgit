@@ -1,12 +1,21 @@
 #!/bin/zsh
 # ============================================================================
-#  zgit Installer for macOS  (v2.1, 2026-11)
+#  zgit Installer for macOS  (v2.2, 2026-11)
 #
 #  使い方:
 #    ./install.sh              # インストール / 更新
 #    ./install.sh --uninstall  # ツールだけ完全除去（Drive上のリポジトリは残す）
 #    ./install.sh --purge      # ツール除去 + Drive上のリポジトリ（データ）も削除
 #    ./install.sh --help       # このヘルプ
+#
+#  v2.2 変更点:
+#    - --save/--push/--pull/--sync を早期ガード: git repo 外・gdrive リモート無し・
+#      detached HEAD で「分かりやすいエラー」で即中断（コミット取り残しを防止）
+#    - --init を冪等化: 既存リポジトリを検出して git init をスキップ、既存 gdrive
+#      リモートを壊さず、失敗時に Drive 上へゴミ bare repo を残さない
+#    - 確認プロンプト (y/N) を非対話環境でも安全側に（/dev/tty → stdin 順、読めなければキャンセル）
+#    - --list: 空白を含むリポジトリ名に対応 / --info: git repo 外で親切メッセージ
+#      / --clone: clone 失敗を確実に exit 1 へ伝播
 #
 #  v2.1 変更点:
 #    - base パスを 3 段階で解決: 環境変数 ZGIT_BASE → ~/.config/zgit/config
@@ -208,7 +217,15 @@ else
     TMP_ZGIT="$(mktemp "${TMPDIR:-/tmp}/zgit.XXXXXX")"
     cat > "$TMP_ZGIT" << 'EOF_ZGIT'
 #!/bin/zsh
-# zgit - The Seamless Git Wrapper for Google Drive (v2.1)
+# zgit - The Seamless Git Wrapper for Google Drive (v2.2)
+# v2.2: safer guards & scripting-friendly prompts:
+#       - --save/--push/--pull/--sync fail fast with clear errors when outside a
+#         git repo, without a gdrive remote, or on a detached HEAD
+#       - --init is idempotent: detects existing repos, never strands an orphan
+#         bare repo on Drive, never clobbers an existing gdrive remote
+#       - confirmation prompts fall back gracefully in non-interactive shells
+#       - --list handles repository names containing spaces; --info is friendly
+#         outside a git repo; --clone propagates clone failure
 # v2.1: base path is now configurable (env ZGIT_BASE > config file > auto-detect),
 #       new `zgit --config` to show the resolved base, and `zgit --info` runs a
 #       git fsck health check (skippable with ZGIT_NO_FSCK=1).
@@ -361,6 +378,36 @@ function get_current_branch() {
     git branch --show-current 2>/dev/null
 }
 
+function require_gdrive_remote() {
+    # --save/--push/--pull/--sync の共通ガード: git repo 内かつ gdrive remote があるか
+    if ! git rev-parse --git-dir > /dev/null 2>&1; then
+        print -P "%F{red}[ERROR] ここは Git リポジトリではありません (zgit --init <repo> で始めてください)%f"
+        return 1
+    fi
+    if ! git remote get-url gdrive > /dev/null 2>&1; then
+        print -P "%F{red}[ERROR] このリポジトリに gdrive リモートがありません (zgit --init <repo> で紐付けてください)%f"
+        return 1
+    fi
+}
+
+function zgit_confirm() {
+    # 対話確認: /dev/tty → stdin の順に読む。どちらも読めない非対話環境では 1 を返す（=No で安全側）
+    # tty があるときは read -k1（1キー即決）、無いときは read -r（"echo y | zgit --delete" 等のパイプ対応）
+    local REPLY
+    if { read -k1 "REPLY? " < /dev/tty } 2>/dev/null; then
+        echo ""
+        [[ "$REPLY" =~ ^[Yy]$ ]] && return 0
+        return 1
+    fi
+    if read -r REPLY 2>/dev/null; then
+        REPLY="${REPLY#"${REPLY%%[![:space:]]*}"}"
+        [[ "$REPLY" =~ ^[Yy]$ ]] && return 0
+        return 1
+    fi
+    print -P "%F{yellow}[INFO] 対話ターミナルがないため確認できません — キャンセル扱いにします%f"
+    return 1
+}
+
 case "$COMMAND" in
     --config)
         print -P "%F{cyan}zgit base 設定 (解決順: ZGIT_BASE env → 設定ファイル → 自動検出)%f"
@@ -411,16 +458,27 @@ case "$COMMAND" in
         setup_gdrive_dir
         GDRIVE_REPO="$BASE/$REPO_NAME.git"
         if [[ -d "$GDRIVE_REPO" ]]; then print -P "%F{red}[ERROR] Gdrive上に既に存在します%f"; exit 1; fi
-        git init --bare "$GDRIVE_REPO" > /dev/null
-        git init > /dev/null
-        git remote add gdrive "$GDRIVE_REPO"
+        # v2.2: 事前チェックをすべて通してから bare repo を作る（失敗時のゴミを防ぐ）
+        if [[ -d .git ]] && git remote get-url gdrive > /dev/null 2>&1; then
+            print -P "%F{red}[ERROR] このリポジトリは既に gdrive に紐付いています: $(git remote get-url gdrive)%f"
+            exit 1
+        fi
+        if ! git init --bare "$GDRIVE_REPO" > /dev/null; then
+            print -P "%F{red}[ERROR] Gdrive上の bare リポジトリ作成に失敗しました: $GDRIVE_REPO%f"
+            exit 1
+        fi
+        if [[ -d .git ]]; then
+            print -P "%F{cyan}[INFO] 既存の Git リポジトリを検出 — git init をスキップします%f"
+            git remote add gdrive "$GDRIVE_REPO"
+        else
+            git init > /dev/null || { print -P "%F{red}[ERROR] git init に失敗しました%f"; exit 1; }
+            git remote add gdrive "$GDRIVE_REPO"
+        fi
         print -P "%F{green}[OK] Initialized local repo and linked to Gdrive.%f"
 
         if [[ ! -f .gitignore ]]; then
             print -P "%F{yellow}[INFO] .gitignore が見つかりません。macOS用の汎用的な .gitignore を作成しますか？ (y/N)%f"
-            read -q "REPLY? " < /dev/tty
-            echo ""
-            if [[ "$REPLY" =~ ^[Yy]$ ]]; then
+            if zgit_confirm; then
                 echo ".DS_Store" > .gitignore
                 echo "node_modules/" >> .gitignore
                 echo "*.log" >> .gitignore
@@ -435,14 +493,14 @@ case "$COMMAND" in
         GDRIVE_REPO="$BASE/$REPO_NAME.git"
         if [[ ! -d "$GDRIVE_REPO" ]]; then print -P "%F{red}[ERROR] リポジトリが見つかりません%f"; exit 1; fi
         print -P "%F{cyan}Cloning $REPO_NAME...%f"
-        git clone "$GDRIVE_REPO" "$REPO_NAME"
+        git clone "$GDRIVE_REPO" "$REPO_NAME" || exit 1
         cd "$REPO_NAME" && git remote rename origin gdrive
         ;;
     --list|-l)
         BASE=$(require_gdrive_base) || exit 1
         print -P "%F{cyan}Gdrive上のリポジトリ一覧:%f"
         repos=$(ls -1 "$BASE" 2>/dev/null | grep '\.git$' | sed 's/\.git$//')
-        [[ -z "$repos" ]] && echo "  (リポジトリなし)" || echo "$repos" | while read repo; do print -P "  - %F{green}$repo%f"; done
+        [[ -z "$repos" ]] && echo "  (リポジトリなし)" || while IFS= read -r repo; do print -P "  - %F{green}$repo%f"; done <<< "$repos"
         ;;
     --delete|--rm)
         REPO_NAME=$1
@@ -451,9 +509,7 @@ case "$COMMAND" in
         GDRIVE_REPO="$BASE/$REPO_NAME.git"
         if [[ ! -d "$GDRIVE_REPO" ]]; then print -P "%F{red}[ERROR] Gdrive上にリポジトリが見つかりません: $REPO_NAME%f"; exit 1; fi
         print -P "%F{yellow}[WARN] 本当に Gdrive 上の '$REPO_NAME' リポジトリを削除しますか？ (y/N)%f"
-        read -q "REPLY? " < /dev/tty
-        echo ""
-        if [[ "$REPLY" =~ ^[Yy]$ ]]; then
+        if zgit_confirm; then
             rm -rf "$GDRIVE_REPO"
             print -P "%F{green}削除しました: $REPO_NAME%f"
         else
@@ -480,18 +536,23 @@ case "$COMMAND" in
         fi
         ;;
     --push)
+        require_gdrive_remote || exit 1
         BRANCH=$(get_current_branch)
-        [[ -z "$BRANCH" ]] && { print -P "%F{red}[ERROR] ブランチがありません%f"; exit 1; }
+        [[ -z "$BRANCH" ]] && { print -P "%F{red}[ERROR] ブランチがありません (detached HEAD?)%f"; exit 1; }
         print -P "%F{cyan}Pushing to Gdrive ($BRANCH)...%f"
         git push gdrive "$BRANCH" "$@"
         ;;
     --pull)
+        require_gdrive_remote || exit 1
         BRANCH=$(get_current_branch)
-        [[ -z "$BRANCH" ]] && { print -P "%F{red}[ERROR] Gitリポジトリ内ではありません%f"; exit 1; }
+        [[ -z "$BRANCH" ]] && { print -P "%F{red}[ERROR] ブランチがありません (detached HEAD?)%f"; exit 1; }
         print -P "%F{cyan}Pulling from Gdrive ($BRANCH)...%f"
         git pull gdrive "$BRANCH" "$@"
         ;;
     --save)
+        require_gdrive_remote || exit 1
+        BRANCH=$(get_current_branch)
+        [[ -z "$BRANCH" ]] && { print -P "%F{red}[ERROR] ブランチがありません (detached HEAD?) — --save を実行できません%f"; exit 1; }
         if [[ $# -eq 0 ]]; then
             MSG="Auto commit from $(hostname -s) at $(date +'%Y-%m-%d %H:%M:%S')"
         else
@@ -522,8 +583,9 @@ case "$COMMAND" in
         print -P "%F{green}[OK] Saved and pushed!%f"
         ;;
     --sync)
+        require_gdrive_remote || exit 1
         BRANCH=$(get_current_branch)
-        [[ -z "$BRANCH" ]] && { print -P "%F{red}[ERROR] ブランチがありません%f"; exit 1; }
+        [[ -z "$BRANCH" ]] && { print -P "%F{red}[ERROR] ブランチがありません (detached HEAD?)%f"; exit 1; }
         STASHED=false
         if [[ -n $(git status -s) ]]; then
             git stash push -m "zgit --sync $(date +'%Y-%m-%d %H:%M:%S')" > /dev/null
@@ -561,6 +623,10 @@ case "$COMMAND" in
         ;;
     --info)
         echo "Dir    : $(pwd)"
+        if ! git rev-parse --git-dir > /dev/null 2>&1; then
+            print -P "%F{yellow}Branch : (ここは Git リポジトリではありません — zgit --init <repo> で始められます)%f"
+            exit 0
+        fi
         echo "Branch : $(get_current_branch)"
         echo "Remote : $(git remote get-url gdrive 2>/dev/null)"
         git status -s
@@ -595,7 +661,7 @@ case "$COMMAND" in
 esac
 EOF_ZGIT
     SRC_ZGIT="$TMP_ZGIT"
-    print -P "%F{yellow}   同梱の zgit が見つからないため埋め込み版 (v2.1) を使用します%f"
+    print -P "%F{yellow}   同梱の zgit が見つからないため埋め込み版 (v2.2) を使用します%f"
 fi
 
 if [[ -f $ZGIT_BIN ]]; then
