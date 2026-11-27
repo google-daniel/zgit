@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 490" width="1000" height="490" role="img" aria-label="zgit sync flow: Mac A and Mac B run zgit commands against a bare repository stored on Google Drive; conflicts are resolved manually with git rebase --continue.">
+<title>How zgit keeps your Macs in sync</title>
+<rect x="0" y="0" width="1000" height="490" fill="#0d1117"/>
+<text x="500" y="44" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="26" font-weight="700" fill="#e6edf3">How zgit keeps your Macs in sync</text>
+<text x="500" y="70" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="15" fill="#8b949e">Google Drive folder = your git remote — no server, no SSH keys</text>
+<rect x="40" y="104" width="240" height="256" rx="12" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<g transform="translate(60,122) scale(1.15)" stroke="#8b949e" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="0" y="0" width="24" height="15" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="15" x2="12" y2="21"/></g>
+<text x="98" y="146" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="23" font-weight="700" fill="#e6edf3">Mac A</text>
+<text x="60" y="174" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="14.5" fill="#8b949e">~/projects/myapp</text>
+<line x1="60" y1="192" x2="260" y2="192" stroke="#30363d" stroke-width="1"/>
+<text x="60" y="232" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="16" font-weight="700" fill="#e6edf3">--init</text>
+<text x="60" y="252" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="13.5" fill="#8b949e">create + link (once)</text>
+<text x="60" y="278" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="16" font-weight="700" fill="#e6edf3">--save &quot;msg&quot;</text>
+<text x="60" y="298" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="13.5" fill="#8b949e">commit + push</text>
+<text x="60" y="324" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="16" font-weight="700" fill="#e6edf3">--sync</text>
+<text x="60" y="344" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="13.5" fill="#8b949e">stash → pull → pop → push</text>
+<rect x="380" y="104" width="240" height="256" rx="12" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<g transform="translate(400,122) scale(1.15)" stroke="#8b949e" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></g>
+<text x="438" y="146" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="23" font-weight="700" fill="#e6edf3">Google Drive</text>
+<text x="400" y="174" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="14.5" fill="#8b949e">…/Mac/remote_dev_env</text>
+<line x1="400" y1="192" x2="600" y2="192" stroke="#30363d" stroke-width="1"/>
+<text x="400" y="232" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="16" font-weight="700" fill="#e6edf3">myapp.git</text>
+<text x="400" y="252" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="13.5" fill="#3fb950">bare repo — the remote</text>
+<text x="400" y="278" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="16" font-weight="700" fill="#e6edf3">other.git</text>
+<text x="400" y="298" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="13.5" fill="#8b949e">bare repo</text>
+<text x="400" y="324" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="16" font-weight="700" fill="#e6edf3">…</text>
+<text x="400" y="344" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="13.5" fill="#8b949e">one bare repo per project</text>
+<rect x="720" y="104" width="240" height="256" rx="12" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<g transform="translate(740,122) scale(1.15)" stroke="#8b949e" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="0" y="0" width="24" height="15" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="15" x2="12" y2="21"/></g>
+<text x="778" y="146" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="23" font-weight="700" fill="#e6edf3">Mac B</text>
+<text x="740" y="174" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="14.5" fill="#8b949e">~/projects/myapp</text>
+<line x1="740" y1="192" x2="940" y2="192" stroke="#30363d" stroke-width="1"/>
+<text x="740" y="232" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="16" font-weight="700" fill="#e6edf3">--clone</text>
+<text x="740" y="252" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="13.5" fill="#8b949e">copy from Drive (once)</text>
+<text x="740" y="278" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="16" font-weight="700" fill="#e6edf3">--sync</text>
+<text x="740" y="298" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="13.5" fill="#8b949e">stash → pull → pop → push</text>
+<text x="740" y="324" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="16" font-weight="700" fill="#e6edf3">git &lt;anything&gt;</text>
+<text x="740" y="344" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="13.5" fill="#8b949e">passed through untouched</text>
+<defs><marker id="ah-b" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#58a6ff"/></marker><marker id="ah-g" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#3fb950"/></marker></defs>
+<line x1="281" y1="190" x2="379" y2="190" stroke="#58a6ff" stroke-width="2.5" marker-end="url(#ah-b)"/>
+<circle cx="330.0" cy="190" r="12" fill="#58a6ff"/>
+<text x="330.0" y="195" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#0d1117">1</text>
+<text x="330.0" y="174" text-anchor="middle" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="16" font-weight="700" fill="#58a6ff">--save</text>
+<line x1="281" y1="300" x2="379" y2="300" stroke="#58a6ff" stroke-width="2.5" marker-end="url(#ah-b)" marker-start="url(#ah-b)"/>
+<circle cx="330.0" cy="300" r="12" fill="#58a6ff"/>
+<text x="330.0" y="305" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#0d1117">3</text>
+<text x="330.0" y="284" text-anchor="middle" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="16" font-weight="700" fill="#58a6ff">--sync</text>
+<line x1="621" y1="190" x2="719" y2="190" stroke="#58a6ff" stroke-width="2.5" marker-end="url(#ah-b)" marker-start="url(#ah-b)"/>
+<circle cx="670.0" cy="190" r="12" fill="#58a6ff"/>
+<text x="670.0" y="195" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#0d1117">2</text>
+<text x="670.0" y="174" text-anchor="middle" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="16" font-weight="700" fill="#58a6ff">--sync</text>
+<line x1="621" y1="300" x2="709" y2="300" stroke="#3fb950" stroke-width="2.5" stroke-dasharray="6 5"/>
+<line x1="709" y1="300" x2="719" y2="300" stroke="#3fb950" stroke-width="2.5" marker-end="url(#ah-g)"/>
+<text x="670.0" y="284" text-anchor="middle" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-size="16" font-weight="700" fill="#3fb950">--clone</text>
+<rect x="40" y="400" width="920" height="54" rx="10" fill="#252118" stroke="#d29922" stroke-opacity="0.45" stroke-width="1"/>
+<rect x="40" y="400" width="5" height="54" rx="2.5" fill="#d29922"/>
+<g transform="translate(66,420)"><path d="M7 1 L13.5 12.5 L0.5 12.5 Z" fill="none" stroke="#d29922" stroke-width="1.8" stroke-linejoin="round"/><line x1="7" y1="5.5" x2="7" y2="8.6" stroke="#d29922" stroke-width="1.6" stroke-linecap="round"/><circle cx="7" cy="10.8" r="0.9" fill="#d29922"/></g>
+<text x="92" y="433" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="15" fill="#e6edf3"><tspan font-weight="700" fill="#d29922">On conflict: </tspan><tspan font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="700" fill="#58a6ff">--sync</tspan><tspan> pauses → resolve the marked files → </tspan><tspan font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="700" fill="#e6edf3">git rebase --continue</tspan><tspan> → </tspan><tspan font-family="ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace" font-weight="700" fill="#e6edf3">zgit --push</tspan></text>
+</svg>

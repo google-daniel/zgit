@@ -2,6 +2,13 @@
 
 **Use Google Drive as your git server — sync projects across multiple Macs, seamlessly.**
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/sync-flow-dark.svg">
+    <img src="assets/sync-flow-light.svg" alt="Diagram: Mac A and Mac B run zgit commands against a bare repository on Google Drive; --sync conflicts are resolved with git rebase --continue">
+  </picture>
+</p>
+
 zgit is a small zsh wrapper around `git` that treats a folder in your Google Drive as a set of bare repositories. No server, no SSH keys, no subscription: your Drive folder *is* the remote. Options starting with `--` are zgit commands; anything else is passed through to `git` untouched.
 
 ```bash
